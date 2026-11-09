@@ -210,6 +210,25 @@ async function currentUser(config) {
   return u
 }
 
+// This build is Max's own - not meant for anyone else's Compass login,
+// even at the same school. This check only runs client-side, in code
+// anyone can read (open-source, remember), so it's a "please don't" sign
+// on the door rather than an actual lock: someone who's willing to edit
+// this file themselves can delete these three lines and get back in. It's
+// enough to stop someone just using the build as-is without permission,
+// which is the actual problem this exists to solve.
+const ALLOWED_DISPLAY_CODE = "MNOV107"
+
+function requireAllowedUser(u, config) {
+  if (u.username && u.username.toUpperCase() !== ALLOWED_DISPLAY_CODE) {
+    showProblem(
+      "This is a personal BetterCompass build set up for one account. It's not meant to be used on anyone else's Compass login.",
+      false
+    )
+    throw fail(config, 403, "notPermitted", "This build is locked to one account.")
+  }
+}
+
 function bcUser(u) {
   const s = settings()
   const themeId = read("themeId", 1)
@@ -236,6 +255,7 @@ const ROUTES = [
   })],
   ["GET", /^\/api\/v1\/user$/, async (c) => {
     const u = await currentUser(c)
+    requireAllowedUser(u, c)
     return { bcUser: bcUser(u), ...u }
   }],
   ["POST", /^\/api\/v1\/user\/logout$/, async () => {
@@ -260,6 +280,7 @@ const ROUTES = [
   }],
   ["POST", /^\/api\/v1\/user\/create(\/alternate)?$/, async (c) => {
     const u = await currentUser(c)
+    requireAllowedUser(u, c)
     return { user: bcUser(u) }
   }],
   ["GET", /^\/api\/v1\/themes$/, async () => themeList()],

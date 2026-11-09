@@ -6,6 +6,31 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v1.7.0 (local fork) </v-card-title>
+          <ul>
+            <li>
+              This build only runs for Max's own Compass account now - not
+              because it's gated behind a login or anything server-side
+              (there's no server), but because the account check happens
+              right after it works out who's logged in. Anyone else logged
+              in just gets a message saying it's not for them, instead of
+              a working dashboard.
+            </li>
+          </ul>
+        </v-container>
+        <v-container>
+          <v-card-title> v1.6.0 (local fork) </v-card-title>
+          <ul>
+            <li>
+              The self-update check now also covers the floating
+              "BetterCompass" button shown on normal Compass pages, and the
+              script that works out your Compass user ID - not just the
+              main app. All three now fetch and run a newer build live if
+              one's been published, the same way.
+            </li>
+          </ul>
+        </v-container>
+        <v-container>
           <v-card-title> v1.5.0 (local fork) </v-card-title>
           <ul>
             <li>
