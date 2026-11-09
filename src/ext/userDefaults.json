@@ -1,0 +1,99 @@
+{
+ "theme": "dark",
+ "settings": {
+  "dark": true,
+  "learningTaskNotification": true,
+  "weather": true,
+  "minimizeHeaderEvents": false
+ },
+ "weather": true,
+ "learningTaskNotification": true,
+ "minimizeHeaderEvents": false,
+ "settingsSync": true,
+ "cache": false,
+ "themeId": 1,
+ "accentColor": null,
+ "guidedWizard": true,
+ "calendarAutoJump": true,
+ "privacy": {
+  "communications": {
+   "enabled": false,
+   "outsideTenant": false,
+   "directMessages": "friendsOnly",
+   "friendRequests": true
+  }
+ },
+ "discussionsFirstName": null,
+ "discussionsLastName": null,
+ "discussionsImage": null,
+ "customBackground": null,
+ "customBackgroundBlur": 0,
+ "customBackgroundDim": 35,
+ "schoolPhotoSize": 200,
+ "rowsPerPage": 15,
+ "hideIrrelevantTasks": false,
+ "homeGrids": [
+  {
+   "items": [
+    {
+     "id": 7,
+     "itemId": 11,
+     "name": "home.overdueLearningTasks",
+     "friendlyName": "Overdue Learning Tasks Warning Widget",
+     "invisible": true
+    },
+    {
+     "itemId": 0,
+     "id": 0,
+     "name": "home.calendar",
+     "friendlyName": "Calendar Widget"
+    },
+    {
+     "itemId": 1,
+     "id": 1,
+     "name": "home.tasks",
+     "friendlyName": "Tasks Widget"
+    },
+    {
+     "itemId": 2,
+     "id": 2,
+     "name": "home.events",
+     "friendlyName": "Events Widget"
+    }
+   ]
+  },
+  {
+   "items": [
+    {
+     "id": 6,
+     "itemId": 10,
+     "name": "home.notifications",
+     "friendlyName": "Warnings/Notifications Widget",
+     "invisible": true
+    },
+    {
+     "itemId": 3,
+     "id": 3,
+     "name": "home.news",
+     "friendlyName": "News Widget"
+    },
+    {
+     "itemId": 4,
+     "id": 4,
+     "name": "home.weather",
+     "friendlyName": "Weather Widget",
+     "invisible": true
+    },
+    {
+     "itemId": 5,
+     "id": 5,
+     "name": "home.features",
+     "friendlyName": "Features Widget"
+    }
+   ]
+  }
+ ],
+ "calendars": null,
+ "bookmarks": [],
+ "admin": false
+}
