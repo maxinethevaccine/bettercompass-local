@@ -6,15 +6,16 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
-          <v-card-title> v1.7.0 (local fork) </v-card-title>
+          <v-card-title> v1.8.0 (local fork) </v-card-title>
           <ul>
             <li>
-              This build only runs for Max's own Compass account now - not
-              because it's gated behind a login or anything server-side
-              (there's no server), but because the account check happens
-              right after it works out who's logged in. Anyone else logged
-              in just gets a message saying it's not for them, instead of
-              a working dashboard.
+              Replaced the previous "one account only" lock with a shared
+              password instead, so it can actually be used by friends. The
+              password itself isn't stored anywhere in this code - only a
+              hash of it, published in this repo - so it can be changed or
+              revoked at any time just by updating that one file, no
+              rebuild needed. Get the password wrong, or don't have it, and
+              the page just looks like it doesn't exist.
             </li>
           </ul>
         </v-container>
