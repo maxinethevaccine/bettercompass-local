@@ -6,19 +6,31 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
-          <v-card-title> 09/11/2026 (local fork) </v-card-title>
+          <v-card-title> v1.5.0 (local fork) </v-card-title>
+          <ul>
+            <li>
+              BetterCompass now checks this fork's GitHub repo every time you
+              open it, and if a newer version has been published, it loads
+              that automatically - no need to go to chrome://extensions and
+              reload it yourself. If GitHub can't be reached (offline, or
+              blocked by a network), it just runs the version that shipped
+              with the extension, same as before.
+            </li>
+            <li>This changelog is now organized by version instead of by date.</li>
+          </ul>
+        </v-container>
+        <v-container>
+          <v-card-title> v1.4.0 (local fork) </v-card-title>
           <ul>
             <li>
               Added a GitHub icon in the top bar linking to the source code
               for this fork, with a small dot that lights up when a newer
-              version has been published - click it to go straight to the
-              download. This is the only network request this extension
-              makes outside of Compass itself.
+              version has been published.
             </li>
           </ul>
         </v-container>
         <v-container>
-          <v-card-title> 08/11/2026 (local fork) </v-card-title>
+          <v-card-title> v1.3.0 (local fork) </v-card-title>
           <ul>
             <li>
               Fixed Chronicle silently cutting off at 43 entries for the
@@ -29,6 +41,22 @@
               Chronicle entries now show their Points and a
               Green/Amber/Red/Grey rating when Compass provides them.
             </li>
+            <li>
+              Fixed the Teacher section of a class page (which shows who's
+              covering a substituted class) sometimes taking ages to appear,
+              or not appearing until you clicked something else on the page.
+              Three separate bugs: the page waited on a slow, unrelated
+              header image before showing anything at all; the teacher's
+              details were being fetched a second time, needlessly, instead
+              of reusing a request already in flight; and the actual display
+              update wasn't registered correctly, so it only ever showed up
+              as a side effect of something else refreshing the page.
+            </li>
+          </ul>
+        </v-container>
+        <v-container>
+          <v-card-title> v1.2.0 &ndash; v1.2.3 (local fork) </v-card-title>
+          <ul>
             <li>
               Removed the "Go to Route" tool from the navigation drawer - it
               was redundant with normal URL navigation.
@@ -49,17 +77,6 @@
               doesn't actually get sharper past that).
             </li>
             <li>
-              Fixed the Teacher section of a class page (which shows who's
-              covering a substituted class) sometimes taking ages to appear,
-              or not appearing until you clicked something else on the page.
-              Three separate bugs: the page waited on a slow, unrelated
-              header image before showing anything at all; the teacher's
-              details were being fetched a second time, needlessly, instead
-              of reusing a request already in flight; and the actual display
-              update wasn't registered correctly, so it only ever showed up
-              as a side effect of something else refreshing the page.
-            </li>
-            <li>
               Teacher names/photos (on a class page, in Chronicle, in News,
               and in the Staff list) are no longer clickable - clicking them
               tried to open a staff member's own dashboard, which a student
@@ -72,7 +89,7 @@
           </ul>
         </v-container>
         <v-container>
-          <v-card-title> 07/11/2026 (local fork) </v-card-title>
+          <v-card-title> v1.1.x and earlier (local fork) </v-card-title>
           <ul>
             <li>
               Fixed the Chronicle feed crashing/failing to load (bad request
@@ -132,6 +149,13 @@
               fail for a student account.
             </li>
           </ul>
+
+          <v-divider class="my-4"></v-divider>
+          <p class="text-center" style="opacity: 0.6">
+            Below this point: the original BetterCompass project's history,
+            from before this fork existed - kept by date, since there's no
+            fork version number to attach it to.
+          </p>
 
           <v-card-title> 08/04/2022 - 28/04/2022 </v-card-title>
           <ul>

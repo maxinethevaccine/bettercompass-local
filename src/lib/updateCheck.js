@@ -25,12 +25,26 @@ function compareVersions(a, b) {
   return 0
 }
 
-function currentVersion() {
+// bootstrap.js records whichever build it actually ran (local or a newer
+// one fetched from GitHub) here, since that's the real running version -
+// the installed extension's own manifest version doesn't change just
+// because bootstrap.js ran newer code this load.
+export function runningVersion() {
+  try {
+    const running = localStorage.getItem("bcx:runningVersion")
+    if (running) return running
+  } catch (e) {
+    // fall through to the manifest version below
+  }
   try {
     return chrome.runtime.getManifest().version
   } catch (e) {
     return null
   }
+}
+
+function currentVersion() {
+  return runningVersion()
 }
 
 function readCache() {

@@ -4,8 +4,9 @@ A Chrome extension that runs [Troplo's BetterCompass](https://github.com/Troplo/
 frontend directly inside your own, already-logged-in Compass session.
 
 **No proxy, no external servers** - except an optional check against this
-repo's GitHub Releases to tell you when a newer version is available. It
-never talks to the original author's infrastructure.
+repo's GitHub Releases, which can also fetch a newer build and run it on the
+spot (self-update, without ever needing chrome://extensions). It never talks
+to the original author's infrastructure.
 
 This is a personal fork, hardcoded to one school's Compass domain
 (`sjchsdow-nsw.compass.education`). If you go to a different school, you'll
@@ -21,8 +22,23 @@ school's domain before it'll load.
 4. Log in to Compass as normal, then go to
    `https://<your-school>.compass.education/bettercompass` to use it.
 
-A small GitHub icon in the top bar will light up with a dot when a newer
-version has been published here - click it to jump straight to the release.
+Every time you open BetterCompass it checks this repo's latest release, and
+if it's newer than what you've got, it loads that version automatically -
+no reinstalling needed. A small GitHub icon in the top bar also shows this:
+it lights up with a dot if, for whatever reason, a newer version hasn't
+auto-applied yet (e.g. GitHub was briefly unreachable).
+
+## Publishing a release (for whoever maintains this repo)
+
+Each release needs **three** files attached, not just the zip:
+
+- `BetterCompass-extension.zip` (so people can still load it fresh)
+- `app.js` (plain, unzipped - from `extension/app/js/app.js` after building)
+- `app.css` (plain, unzipped - from `extension/app/css/app.css` after building)
+
+The extension's self-update feature fetches `app.js`/`app.css` directly by
+their predictable GitHub release-asset URL, so those two files need to be
+attached with those exact names on every release for it to work.
 
 ## What's different from the original
 

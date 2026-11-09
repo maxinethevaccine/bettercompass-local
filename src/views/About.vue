@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { UPDATE_REPO_URL } from "@/lib/updateCheck"
+import { UPDATE_REPO_URL, runningVersion } from "@/lib/updateCheck"
 
 export default {
   name: "About",
@@ -62,13 +62,10 @@ export default {
       return UPDATE_REPO_URL
     },
     extensionVersion() {
-      // Reads the live installed extension's manifest, so this always
-      // matches the actual build without needing to be updated by hand.
-      try {
-        return chrome.runtime.getManifest().version
-      } catch (e) {
-        return "unknown"
-      }
+      // The version actually running (which may be newer than the
+      // installed extension's own manifest version, if bootstrap.js
+      // fetched a newer build from GitHub this load).
+      return runningVersion() || "unknown"
     }
   }
 }

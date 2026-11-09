@@ -119,11 +119,11 @@
           </v-btn>
         </template>
         <span v-if="updateInfo.updateAvailable">
-          Update available: v{{ updateInfo.latestVersion }} (you have v{{
+          v{{ updateInfo.latestVersion }} is out (you're on v{{
             updateInfo.currentVersion
-          }}) - click to download
+          }}) - it'll load automatically next time you open this page
         </span>
-        <span v-else>Source on GitHub</span>
+        <span v-else>Source on GitHub - you're on the latest version</span>
       </v-tooltip>
       <v-menu
         v-if="$store.state.user.username"
