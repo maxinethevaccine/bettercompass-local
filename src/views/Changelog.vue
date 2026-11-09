@@ -6,41 +6,22 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
-          <v-card-title> v1.8.0 (local fork) </v-card-title>
+          <v-card-title> v1.9.0 (local fork) </v-card-title>
           <ul>
             <li>
-              Replaced the previous "one account only" lock with a shared
-              password instead, so it can actually be used by friends. The
-              password itself isn't stored anywhere in this code - only a
-              hash of it, published in this repo - so it can be changed or
-              revoked at any time just by updating that one file, no
-              rebuild needed. Get the password wrong, or don't have it, and
-              the page just looks like it doesn't exist.
+              Removed the "self-update" loader added in v1.5.0 - v1.8.0. It
+              never worked in a real browser: Chrome does not let an
+              extension like this one run code it has downloaded, so those
+              versions could not start at all. BetterCompass loads directly
+              from the installed extension again, as it did up to v1.4.0.
             </li>
-          </ul>
-        </v-container>
-        <v-container>
-          <v-card-title> v1.6.0 (local fork) </v-card-title>
-          <ul>
             <li>
-              The self-update check now also covers the floating
-              "BetterCompass" button shown on normal Compass pages, and the
-              script that works out your Compass user ID - not just the
-              main app. All three now fetch and run a newer build live if
-              one's been published, the same way.
+              Removed the password screen and the one-account lock that were
+              briefly added in those versions.
             </li>
-          </ul>
-        </v-container>
-        <v-container>
-          <v-card-title> v1.5.0 (local fork) </v-card-title>
-          <ul>
             <li>
-              BetterCompass now checks this fork's GitHub repo every time you
-              open it, and if a newer version has been published, it loads
-              that automatically - no need to go to chrome://extensions and
-              reload it yourself. If GitHub can't be reached (offline, or
-              blocked by a network), it just runs the version that shipped
-              with the extension, same as before.
+              The GitHub icon still shows a dot when a newer version has been
+              published. Updating is still a manual download and reload.
             </li>
             <li>This changelog is now organized by version instead of by date.</li>
           </ul>

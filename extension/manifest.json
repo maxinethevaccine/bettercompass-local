@@ -1,29 +1,25 @@
 {
   "manifest_version": 3,
   "name": "BetterCompass (local)",
-  "version": "1.8.0",
-  "description": "Runs the BetterCompass interface inside your own logged-in Compass session. No proxy, no external servers except an optional GitHub update check that can also fetch a newer build, and a password check against a hash published in the same repo.",
+  "version": "1.9.0",
+  "description": "Runs the BetterCompass interface inside your own logged-in Compass session. No proxy, no external servers except a check of this fork's GitHub releases for a newer version.",
   "icons": {
     "16": "icons/16.png",
     "48": "icons/48.png",
     "128": "icons/128.png"
   },
-  "host_permissions": [
-    "https://api.github.com/*",
-    "https://github.com/*",
-    "https://*.githubusercontent.com/*"
-  ],
   "content_scripts": [
     {
       "matches": [
         "https://sjchsdow-nsw.compass.education/bettercompass*"
       ],
       "js": [
-        "access-gate.js",
-        "selfupdate-core.js",
-        "bootstrap.js"
+        "app/js/app.js"
       ],
-      "run_at": "document_start"
+      "run_at": "document_start",
+      "css": [
+        "app/css/app.css"
+      ]
     },
     {
       "matches": [
@@ -33,8 +29,6 @@
         "https://sjchsdow-nsw.compass.education/bettercompass*"
       ],
       "js": [
-        "access-gate.js",
-        "selfupdate-core.js",
         "launcher.js"
       ],
       "run_at": "document_idle"
@@ -47,7 +41,6 @@
         "https://sjchsdow-nsw.compass.education/bettercompass*"
       ],
       "js": [
-        "selfupdate-core.js",
         "finder.js"
       ],
       "run_at": "document_idle",
