@@ -54,61 +54,141 @@ async function getDownloaded() {
   return { version: remote.version, source: "github", js: remote.js, css: remote.css }
 }
 
-// Looks at the latest release. If it is newer than what we have, downloads
-// app.js and app.css from it. Resolves to the new version, or null.
-async function checkForUpdate(force) {
-  const s = await chrome.storage.local.get(["remote", "bad", "lastCheck"])
-  if (!force && s.lastCheck && Date.now() - s.lastCheck < CHECK_EVERY_MS) return null
-  await chrome.storage.local.set({ lastCheck: Date.now() })
+// Reads one file out of a .zip, using the browser's own decompression - the
+// release zip is always attached, so updating works even when the loose
+// app.js/app.css files have been left off a release.
+async function fileFromZip(buf, wanted) {
+  const dv = new DataView(buf)
+  let eocd = -1
+  const floor = Math.max(0, buf.byteLength - 70000)
+  for (let i = buf.byteLength - 22; i >= floor; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) {
+      eocd = i
+      break
+    }
+  }
+  if (eocd < 0) return null
+  const count = dv.getUint16(eocd + 10, true)
+  let p = dv.getUint32(eocd + 16, true)
+  const dec = new TextDecoder()
+  for (let i = 0; i < count; i++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) return null
+    const method = dv.getUint16(p + 10, true)
+    const compSize = dv.getUint32(p + 20, true)
+    const nameLen = dv.getUint16(p + 28, true)
+    const extraLen = dv.getUint16(p + 30, true)
+    const commentLen = dv.getUint16(p + 32, true)
+    const localOffset = dv.getUint32(p + 42, true)
+    const name = dec.decode(new Uint8Array(buf, p + 46, nameLen))
+    if (name === wanted) {
+      const localNameLen = dv.getUint16(localOffset + 26, true)
+      const localExtraLen = dv.getUint16(localOffset + 28, true)
+      const dataStart = localOffset + 30 + localNameLen + localExtraLen
+      const slice = buf.slice(dataStart, dataStart + compSize)
+      if (method === 0) return dec.decode(slice)
+      if (method !== 8) return null
+      return await new Response(
+        new Blob([slice]).stream().pipeThrough(new DecompressionStream("deflate-raw"))
+      ).text()
+    }
+    p += 46 + nameLen + extraLen + commentLen
+  }
+  return null
+}
 
-  // github.com/<repo>/releases/latest redirects to .../releases/tag/<tag>
-  const res = await fetch(LATEST_URL, { redirect: "follow", cache: "no-store" })
-  if (!res.ok) return null
-  const m = /\/releases\/tag\/([^/?#]+)/.exec(res.url)
-  if (!m) return null
-  const tag = decodeURIComponent(m[1])
-  const version = tag.replace(/^v/, "")
-  if (!/^\d+(\.\d+)*$/.test(version)) return null
-
-  const have =
-    s.remote && compareVersions(s.remote.version, bundledVersion) > 0
-      ? s.remote.version
-      : bundledVersion
-  if (compareVersions(version, have) <= 0) return null
-  if ((s.bad || []).includes(version)) return null
-
+// Gets the app's files out of a release: from the zip if it is there,
+// otherwise from app.js/app.css attached on their own.
+async function appFilesFromRelease(tag) {
   const base =
     "https://github.com/" + REPO + "/releases/download/" + encodeURIComponent(tag) + "/"
+  try {
+    const zipRes = await fetch(base + "BetterCompass-extension.zip", { cache: "no-store" })
+    if (zipRes.ok) {
+      const buf = await zipRes.arrayBuffer()
+      const [js, css] = await Promise.all([
+        fileFromZip(buf, "app/js/app.js"),
+        fileFromZip(buf, "app/css/app.css")
+      ])
+      if (js && css) return { js, css }
+    }
+  } catch (e) {
+    /* fall through to the loose files */
+  }
   const [jsRes, cssRes] = await Promise.all([
     fetch(base + "app.js", { cache: "no-store" }),
     fetch(base + "app.css", { cache: "no-store" })
   ])
   if (!jsRes.ok || !cssRes.ok) return null
   const [js, css] = await Promise.all([jsRes.text(), cssRes.text()])
+  return { js, css }
+}
+
+// Looks at the latest release and downloads it if it is newer than what we
+// have. Resolves to { state, version }, where state is one of:
+//   "current"     - nothing newer published
+//   "downloaded"  - a newer version is now ready, waiting for a reload
+//   "unreachable" - GitHub could not be reached (offline, or private repo)
+//   "incomplete"  - there is a newer release, but its files are missing
+async function checkForUpdate(force) {
+  const s = await chrome.storage.local.get(["remote", "bad", "lastCheck"])
+  if (!force && s.lastCheck && Date.now() - s.lastCheck < CHECK_EVERY_MS) {
+    return { state: "current" }
+  }
+  await chrome.storage.local.set({ lastCheck: Date.now() })
+
+  // github.com/<repo>/releases/latest redirects to .../releases/tag/<tag>
+  let res
+  try {
+    res = await fetch(LATEST_URL, { redirect: "follow", cache: "no-store" })
+  } catch (e) {
+    return { state: "unreachable" }
+  }
+  if (!res.ok) return { state: "unreachable" }
+  const m = /\/releases\/tag\/([^/?#]+)/.exec(res.url)
+  if (!m) return { state: "unreachable" }
+  const tag = decodeURIComponent(m[1])
+  const version = tag.replace(/^v/, "")
+  if (!/^\d+(\.\d+)*$/.test(version)) return { state: "current" }
+
+  const have =
+    s.remote && compareVersions(s.remote.version, bundledVersion) > 0
+      ? s.remote.version
+      : bundledVersion
+  if (compareVersions(version, have) <= 0) return { state: "current" }
+  if ((s.bad || []).includes(version)) return { state: "current" }
+
+  const files = await appFilesFromRelease(tag)
+  if (!files) return { state: "incomplete", version }
+  const { js, css } = files
   // A release without real files (or an error page) must never replace a
   // working copy.
-  if (js.length < MIN_JS_BYTES || css.length < MIN_CSS_BYTES) return null
-  if (js.trimStart().startsWith("<")) return null
+  if (js.length < MIN_JS_BYTES || css.length < MIN_CSS_BYTES) {
+    return { state: "incomplete", version }
+  }
+  if (js.trimStart().startsWith("<")) return { state: "incomplete", version }
 
   await chrome.storage.local.set({ remote: { version, js, css, savedAt: Date.now() } })
-  return version
+  return { state: "downloaded", version }
 }
 
 function checkInBackground(tabId, force) {
   if (!checking) {
     checking = checkForUpdate(force)
-      .catch(() => null)
-      .then((v) => {
+      .catch(() => ({ state: "unreachable" }))
+      .then((r) => {
         checking = null
-        return v
+        return r
       })
   }
-  checking.then((version) => {
-    if (version && tabId != null) {
-      chrome.tabs
-        .sendMessage(tabId, { type: "bcx-update-ready", version })
-        .catch(() => {})
-    }
+  checking.then((result) => {
+    if (tabId == null) return
+    chrome.tabs
+      .sendMessage(tabId, {
+        type: "bcx-check-result",
+        state: result.state,
+        version: result.version || null
+      })
+      .catch(() => {})
   })
 }
 

@@ -58,6 +58,9 @@
             <v-icon left small>mdi-update</v-icon>
             {{ checkLabel }}
           </v-btn>
+          <div v-if="checkMessage" class="mt-2">
+            <small>{{ checkMessage }}</small>
+          </div>
         </v-container>
       </v-card>
     </v-container>
@@ -71,6 +74,7 @@ import {
   runningSource,
   updateReadyVersion,
   onUpdateReady,
+  onCheckResult,
   checkNow
 } from "@/lib/updateCheck"
 
@@ -91,13 +95,31 @@ export default {
     checkLabel() {
       if (this.ready) return "v" + this.ready + " downloaded - reload to use it"
       if (this.checking) return "Checking GitHub..."
-      return this.checked ? "No newer version found" : "Check for updates now"
+      return "Check for updates now"
+    },
+    checkMessage() {
+      if (this.ready) return null
+      switch (this.state) {
+        case "current":
+          return "You are on the latest version."
+        case "unreachable":
+          return "GitHub could not be reached, so there is no way to tell whether a newer version exists. This also happens when the repository is private."
+        case "incomplete":
+          return (
+            "v" +
+            (this.stateVersion || "?") +
+            " has been published, but its files could not be downloaded. The release needs BetterCompass-extension.zip attached to it."
+          )
+        default:
+          return null
+      }
     }
   },
   data() {
     return {
       checking: false,
-      checked: false,
+      state: null,
+      stateVersion: null,
       ready: updateReadyVersion()
     }
   },
@@ -106,9 +128,15 @@ export default {
       this.ready = version
       this.checking = false
     })
+    this.stopCheckListener = onCheckResult((state, version) => {
+      this.state = state
+      this.stateVersion = version
+      this.checking = false
+    })
   },
   beforeDestroy() {
     if (this.stopUpdateListener) this.stopUpdateListener()
+    if (this.stopCheckListener) this.stopCheckListener()
   },
   methods: {
     checkForUpdates() {
@@ -116,9 +144,8 @@ export default {
       this.checking = true
       checkNow()
       setTimeout(() => {
-        if (this.checking) this.checked = true
         this.checking = false
-      }, 8000)
+      }, 15000)
     }
   }
 }

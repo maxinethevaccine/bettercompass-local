@@ -2,8 +2,9 @@
 // short edit per release, next to the version number in the manifest, rather
 // than buried in the page.
 export const LATEST_CHANGES = {
-  version: "2.0.3",
+  version: "2.0.4",
   items: [
+    "Updates now come from the release zip, so publishing one only needs that single file attached.",
     "Learning Tasks no longer looks empty: when everything is older than the \"Hide Irrelevant Tasks\" cut-off it now says so, with a button to show them all.",
     "BetterCompass now asks Compass who is signed in, instead of trusting a user ID left in this browser - so a shared or borrowed computer shows the right person, with no reload.",
     "Signing out of Compass clears the name, email and timetable kept in this browser.",

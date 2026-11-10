@@ -41,12 +41,12 @@ user's Compass session, so keep this GitHub account secure.
 ## Publishing a release
 
 1. Build (see below).
-2. Create a release whose tag is the new version, e.g. `v2.0.1`. It must be
+2. Create a release whose tag is the new version, e.g. `v2.0.5`. It must be
    higher than the last one.
-3. Attach three files with exactly these names:
-   - `app.js` (from `extension/app/js/app.js`)
-   - `app.css` (from `extension/app/css/app.css`)
-   - `BetterCompass-extension.zip` (the whole `extension` folder, for new installs)
+3. Attach `BetterCompass-extension.zip` (the whole `extension` folder zipped).
+   That one file is enough: the updater reads `app.js` and `app.css` out of
+   it. Loose `app.js`/`app.css` files are still read if they are attached, so
+   versions before 2.0.4 can update too.
 
 The repo must be public, or nobody's extension can see the release.
 

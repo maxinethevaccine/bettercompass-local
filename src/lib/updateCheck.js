@@ -26,6 +26,22 @@ export function updateReadyVersion() {
   return root().dataset.bcxUpdateReady || null
 }
 
+// What the last check found: "current", "downloaded", "unreachable",
+// "incomplete", or null if no check has finished yet.
+export function lastCheckState() {
+  return root().dataset.bcxCheckState || null
+}
+
+export function lastCheckVersion() {
+  return root().dataset.bcxCheckVersion || null
+}
+
+export function onCheckResult(callback) {
+  const handler = () => callback(lastCheckState(), lastCheckVersion())
+  document.addEventListener("bcx-check-result", handler)
+  return () => document.removeEventListener("bcx-check-result", handler)
+}
+
 export function onUpdateReady(callback) {
   const handler = () => callback(updateReadyVersion())
   document.addEventListener("bcx-update-ready", handler)

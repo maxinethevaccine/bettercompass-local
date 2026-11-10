@@ -24,7 +24,16 @@
   }
 
   chrome.runtime.onMessage.addListener(function (msg) {
-    if (msg && msg.type === "bcx-update-ready") showUpdateReady(msg.version)
+    if (!msg) return
+    if (msg.type === "bcx-update-ready") showUpdateReady(msg.version)
+    if (msg.type === "bcx-check-result") {
+      // Let the About page say what happened, instead of leaving someone
+      // wondering why nothing updated.
+      root.dataset.bcxCheckState = msg.state
+      root.dataset.bcxCheckVersion = msg.version || ""
+      document.dispatchEvent(new CustomEvent("bcx-check-result"))
+      if (msg.state === "downloaded") showUpdateReady(msg.version)
+    }
   })
 
   // The app asks for an immediate check (About page button).

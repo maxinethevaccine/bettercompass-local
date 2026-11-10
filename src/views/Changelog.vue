@@ -6,6 +6,23 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v2.0.4 (local fork) </v-card-title>
+          <ul>
+            <li>
+              Updates are now taken from the release's
+              BetterCompass-extension.zip, so a release only needs that one
+              file attached. v2.0.3 did not update because it looked for
+              app.js and app.css attached separately, and a release without
+              them did nothing at all.
+            </li>
+            <li>
+              "Check for updates now" on the About page now says what it
+              found: that you are up to date, that GitHub could not be
+              reached, or that a newer release is missing its files.
+            </li>
+          </ul>
+        </v-container>
+        <v-container>
           <v-card-title> v2.0.3 (local fork) </v-card-title>
           <ul>
             <li>
