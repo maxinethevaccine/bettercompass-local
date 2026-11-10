@@ -28,8 +28,8 @@
             >.
           </p>
           <p class="subheading">
-            This is Max's local fork: no proxy, no telemetry to Troplo's
-            servers, runs entirely inside your own Compass session.
+            This is a local fork: no proxy, no telemetry to Troplo's servers,
+            runs entirely inside your own Compass session.
           </p>
           <v-btn
             text
@@ -46,11 +46,15 @@
             on: {{ $store.state.versioning.date }}</small
           ><br />
           <small
-            >Fixed by Max, version {{ extensionVersion }} ({{
+            >Fixed by maxinethevaccine, version {{ extensionVersion }} ({{
               sourceLabel
             }})</small
           ><br />
-          <v-btn small class="rounded-xl mt-3" @click="checkForUpdates">
+          <v-btn
+            small
+            class="rounded-xl mt-3 bcx-update-btn"
+            @click="checkForUpdates"
+          >
             <v-icon left small>mdi-update</v-icon>
             {{ checkLabel }}
           </v-btn>
@@ -119,3 +123,13 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* Vuetify shouts button labels in spaced-out capitals, which looked wrong on
+   a sentence this long. Plain sentence case instead. */
+.bcx-update-btn >>> .v-btn__content {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+}
+</style>

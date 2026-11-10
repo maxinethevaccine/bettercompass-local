@@ -6,6 +6,16 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v2.0.1 (local fork) </v-card-title>
+          <ul>
+            <li>
+              The "Check for updates now" button on the About page no longer
+              shouts in spaced-out capitals.
+            </li>
+            <li>Wording on the About page.</li>
+          </ul>
+        </v-container>
+        <v-container>
           <v-card-title> v2.0.0 (local fork) </v-card-title>
           <ul>
             <li>

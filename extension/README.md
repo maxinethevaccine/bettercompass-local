@@ -19,7 +19,7 @@ The extension tries to detect your Compass user ID by itself. If it cannot, a re
 ## Notes
 - Settings and custom themes are saved in this browser (localStorage keys starting `bcx:`). Clearing site data resets them.
 - Not available in this version: weather, the discussions/chat backend, feedback sending, admin pages.
-- The extension only runs on sjchsdow-nsw.compass.education and asks for no permissions.
+- The extension only runs on sjchsdow-nsw.compass.education and now asks for storage and scripting permissions, used only by the auto-updater.
 - Another school: change the two `matches` URLs in manifest.json, then reload the extension.
 
 ## Rebuild from source
