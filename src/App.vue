@@ -1,5 +1,5 @@
 <template>
-  <v-app :style="appStyle">
+  <v-app :style="appStyle" :class="{ 'bcx-has-bg': !!customBackground }">
     <div
       v-if="customBackground"
       class="bcx-custom-bg"
@@ -15,7 +15,8 @@
     </v-overlay>
     <v-dialog
       v-if="$store.state.user.bcUser"
-      v-model="$store.state.user.bcUser.guidedWizard"
+      :value="$store.state.user.bcUser.guidedWizard"
+      @input="$event || completeGuidedWizard()"
       max-width="600px"
     >
       <v-card color="card" class="text-center justify-center">
@@ -145,12 +146,6 @@
                 ></v-switch>
                 <v-switch
                   @change="saveSettings"
-                  v-model="$store.state.user.bcUser.weather"
-                  inset
-                  label="Show weather widget"
-                ></v-switch>
-                <v-switch
-                  @change="saveSettings"
                   v-model="$store.state.user.bcUser.minimizeHeaderEvents"
                   inset
                   label="Minimize header events"
@@ -271,6 +266,23 @@
   bottom: 0;
   z-index: -1;
 }
+/* Without this the cards, sidebar and top bar cover the background picture
+   completely and only the gaps between them show it. "Background see-through"
+   in Settings > Customization controls how much shows. */
+.bcx-has-bg .v-main .v-card,
+.bcx-has-bg .v-main .v-sheet,
+.bcx-has-bg .v-navigation-drawer,
+.bcx-has-bg .v-app-bar,
+.bcx-has-bg .v-main .v-toolbar,
+.bcx-has-bg .v-main .v-data-table {
+  opacity: var(--bcx-surface-opacity, 1);
+}
+/* Dialogs and menus stay solid so they are readable. */
+.bcx-has-bg .v-dialog .v-card,
+.bcx-has-bg .v-menu__content .v-sheet,
+.bcx-has-bg .v-menu__content .v-list {
+  opacity: 1;
+}
 </style>
 <script>
 import Header from "./components/Header.vue"
@@ -310,7 +322,12 @@ export default {
         ? "transparent"
         : this.$vuetify.theme.themes[this.$vuetify.theme.dark ? "dark" : "light"]
             .bg
-      return "background-color: " + bg
+      return (
+        "background-color: " +
+        bg +
+        "; --bcx-surface-opacity: " +
+        this.surfaceOpacityStyle
+      )
     },
     routerViewStyle() {
       const bg = this.customBackground
@@ -333,6 +350,12 @@ export default {
       return {
         backgroundColor: "rgba(0, 0, 0, " + dim / 100 + ")"
       }
+    },
+    surfaceOpacityStyle() {
+      // 0 = cards fully solid (background only shows in the gaps),
+      // 100 = cards fully see-through.
+      const through = this.$store.state.user.bcUser?.customBackgroundOpacity ?? 25
+      return 1 - Math.min(50, Math.max(0, through)) / 100
     },
     computeThemes() {
       let array = []
@@ -508,6 +531,14 @@ export default {
     this.$store
       .dispatch("getUserInfo")
       .then(() => {
+        // Signing in tells us the school's real name ("St Example's High
+        // School") instead of the address it lives at ("example-nsw").
+        this.$store.commit("setSchool", {
+          name: localStorage.getItem("schoolName"),
+          id: localStorage.getItem("schoolId"),
+          fqdn: localStorage.getItem("schoolFqdn"),
+          instance: localStorage.getItem("schoolInstance")
+        })
         this.$store.dispatch("updateQuickSwitch")
       })
       .catch((e) => {

@@ -120,17 +120,19 @@
                     <br />
                     <b>
                       <template v-for="parent in parents">
-                        {{ parent.name }} ({{ parent.importIdentifier }} /
-                        {{ parent.id }})
+                        {{ parentLabel(parent) }}
                         <br :key="parent.id" />
                       </template>
                     </b>
                   </template>
                   <v-tooltip top>
                     <template v-slot:activator="{ on }">
-                      <v-chip color="indigo" v-on="on">{{
-                        user.chroniclePinnedCount
-                      }}</v-chip>
+                      <v-chip
+                        color="indigo"
+                        v-if="user.chroniclePinnedCount"
+                        v-on="on"
+                        >{{ user.chroniclePinnedCount }}</v-chip
+                      >
                     </template>
                     <span> Pinned Chronicle Count </span>
                   </v-tooltip>
@@ -519,6 +521,14 @@ export default {
     }
   },
   methods: {
+    parentLabel(parent) {
+      // Compass already puts the code in the name ("Jane Smith - JSMI12"),
+      // so only add it when it is not there.
+      const name = String(parent.name || "").trim()
+      const code = String(parent.importIdentifier || "").trim()
+      const shown = code && !name.includes(code) ? name + " - " + code : name
+      return shown + " (" + parent.id + ")"
+    },
     getParents() {
       if (this.user.userId === this.$store.state.user.id) {
         this.axios

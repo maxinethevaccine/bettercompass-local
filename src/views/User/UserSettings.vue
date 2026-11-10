@@ -261,8 +261,7 @@
         <v-toolbar-title>BetterCompass Settings</v-toolbar-title> </v-toolbar
       ><br />
       <v-alert type="info" class="mx-6" text>
-        Your settings (including themes) now synchronize throughout all of your
-        devices.
+        Your settings (including themes) are saved in this browser only.
       </v-alert>
       <v-card-title>Website Settings</v-card-title>
       <v-card-text>
@@ -390,6 +389,19 @@
             max="20"
             thumb-label
           ></v-slider>
+        <p class="mt-2 mb-0">
+          Background see-through:
+          {{ $store.state.user.bcUser.customBackgroundOpacity ?? 25 }}%
+        </p>
+        <v-slider
+          v-model="$store.state.user.bcUser.customBackgroundOpacity"
+          @change="saveSettings"
+          min="0"
+          max="50"
+          thumb-label
+          hide-details
+          label="See-through"
+        ></v-slider>
         </template>
         <small>Only visible to you, and stored on this device.</small>
       </v-card-text>
@@ -504,14 +516,6 @@
           inset
           label="Show overdue learning task warning"
           color="warning"
-        ></v-switch>
-      </v-card-text>
-      <v-card-text>
-        <v-switch
-          @change="saveSettings"
-          v-model="$store.state.user.bcUser.weather"
-          inset
-          label="Show weather widget"
         ></v-switch>
       </v-card-text>
       <v-card-text v-if="debugModeEnabled">

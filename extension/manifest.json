@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BetterCompass (local)",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Runs the BetterCompass interface inside your own logged-in Compass session. No proxy. The only outside server it contacts is GitHub, to download newer versions of itself from this fork's releases.",
   "icons": {
     "16": "icons/16.png",

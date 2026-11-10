@@ -3,10 +3,8 @@
  "settings": {
   "dark": true,
   "learningTaskNotification": true,
-  "weather": true,
   "minimizeHeaderEvents": false
  },
- "weather": true,
  "learningTaskNotification": true,
  "minimizeHeaderEvents": false,
  "settingsSync": true,
@@ -78,13 +76,6 @@
      "friendlyName": "News Widget"
     },
     {
-     "itemId": 4,
-     "id": 4,
-     "name": "home.weather",
-     "friendlyName": "Weather Widget",
-     "invisible": true
-    },
-    {
      "itemId": 5,
      "id": 5,
      "name": "home.features",
@@ -107,5 +98,6 @@
   "scale": 100,
   "custom": [],
   "uploaded": null
- }
+ },
+ "customBackgroundOpacity": 25
 }

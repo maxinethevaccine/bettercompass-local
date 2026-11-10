@@ -118,6 +118,35 @@ function showProblem(text, askId) {
   }
 }
 
+// Everything in this browser that belongs to one particular person. Cleared
+// whenever the signed-in account changes, or cannot be confirmed, so the next
+// person to open BetterCompass on a shared computer is not shown the last
+// person's timetable, name or email.
+const PER_USER_KEYS = ["userCache", "calendarCache", "userId"]
+
+function forgetPreviousUser() {
+  PER_USER_KEYS.forEach((k) => {
+    try {
+      localStorage.removeItem(k)
+    } catch (e) {}
+  })
+  try {
+    localStorage.removeItem(PREFIX + "uid")
+    localStorage.removeItem(PREFIX + "sussiId")
+  } catch (e) {}
+}
+
+// Keeps the stored id in step with whoever is actually signed in.
+function rememberUser(u) {
+  const previous = read("uid", null)
+  if (previous && previous !== u.userId) forgetPreviousUser()
+  write("uid", u.userId)
+  write("sussiId", u.username)
+  try {
+    localStorage.setItem("userId", String(u.userId))
+  } catch (e) {}
+}
+
 const ROLES = ["GUEST", "STUDENT", "STAFF", "PARENT", "ADMIN", "VISITOR", "NOT AUTHENTICATED", "UNKNOWN"]
 
 async function compassPost(path, body) {
@@ -135,6 +164,22 @@ async function compassPost(path, body) {
     /* not JSON */
   }
   return { status: res.status, text, json }
+}
+
+// Compass's own mobile endpoint answers for whoever is signed in right now.
+// It also carries the school's real name. Returns null if it is unavailable
+// (older Compass versions) or nobody is signed in.
+let extendedUser
+async function getExtendedUser() {
+  if (extendedUser !== undefined) return extendedUser
+  try {
+    const r = await compassPost("/Services/mobile.svc/GetExtendedUser", {})
+    const d = r.json && r.json.d
+    extendedUser = d && d.success && d.data && d.data.userId ? d.data : null
+  } catch (e) {
+    extendedUser = null
+  }
+  return extendedUser
 }
 
 // Compass pages define the logged-in user's id in their own scripts; read it from the page source.
@@ -160,12 +205,41 @@ function splitName(full) {
 }
 
 async function currentUser(config) {
+  // Who is signed in to Compass right now? This is the reliable answer, and it
+  // means a user id left behind by someone else cannot be used by mistake.
+  const ext = await getExtendedUser()
+  if (ext) {
+    const names = splitName(ext.reportName || ext.firstName + " " + ext.lastName)
+    const u = {
+      id: ext.userId,
+      userId: ext.userId,
+      username: ext.sussiId || ext.displayCode || "",
+      sussiId: ext.sussiId || ext.displayCode || "",
+      firstName: ext.firstName || names.firstName,
+      lastName: ext.lastName || names.lastName,
+      reportName: ext.reportName || [ext.firstName, ext.lastName].filter(Boolean).join(" "),
+      imageGuid: ext.imageGuid || "",
+      personalEmail: ext.email || null,
+      baseRole: ROLES[ext.baseRole] || "STUDENT",
+      children: []
+    }
+    if (ext.school && ext.school.Name) {
+      try {
+        localStorage.setItem("schoolName", ext.school.Name)
+      } catch (e) {}
+    }
+    rememberUser(u)
+    return u
+  }
+
   let id = read("uid", null)
   if (!id) id = await sniffUserId()
   if (!id) {
+    forgetPreviousUser()
     showProblem(
-      "I could not work out your Compass user ID automatically (make sure you are logged in to Compass).",
-      true
+      "You do not appear to be signed in to Compass. Open Compass, sign in, " +
+        "then come back to this page.",
+      false
     )
     throw fail(config, 401, "noUserId", "Compass user ID unknown.")
   }
@@ -181,14 +255,44 @@ async function currentUser(config) {
   }
   const d = r.json && r.json.d
   if (!d || !d.userId) {
-    localStorage.removeItem(PREFIX + "uid")
-    showProblem(
-      "Compass did not return an account for user ID " + id + " (HTTP " + r.status + "). If you are logged in, " +
-        "the ID may be wrong.\nReply: " + r.text.replace(/\s+/g, " ").slice(0, 300),
-      true
-    )
+    forgetPreviousUser()
+    // A stored id can go stale (someone else used this browser, or the school
+    // re-numbered accounts). Ask the page who is signed in and try once more.
+    const sniffed = await sniffUserId()
+    if (sniffed && sniffed !== id) {
+      let retry
+      try {
+        retry = await compassPost("/Services/User.svc/GetUserDetailsBlobByUserId", {
+          userId: sniffed,
+          targetUserId: sniffed
+        })
+      } catch (e) {
+        retry = null
+      }
+      const rd = retry && retry.json && retry.json.d
+      if (rd && rd.userId) return buildUser(sniffed, rd)
+    }
+    // Compass answers service calls with its sign-in page when the session has
+    // expired, so a non-JSON reply means "signed out", not "wrong id".
+    if (!r.json) {
+      showProblem(
+        "Your Compass session has ended. Open Compass, sign in again, then " +
+          "reload this page.",
+        false
+      )
+    } else {
+      showProblem(
+        "Compass did not return an account for user ID " + id + ". If you are " +
+          "signed in, the ID may be wrong.",
+        true
+      )
+    }
     throw fail(config, 401, "notLoggedIn", "Not logged in to Compass.")
   }
+  return buildUser(id, d)
+}
+
+function buildUser(id, d) {
   const names = splitName(d.userFullName)
   const photo = /[0-9a-fA-F]{8}-[0-9a-fA-F-]{27}/.exec(String(d.userPhotoPath || ""))
   const u = {
@@ -204,9 +308,7 @@ async function currentUser(config) {
     baseRole: ROLES[d.userRole] || "STUDENT",
     children: []
   }
-  write("uid", id)
-  write("sussiId", u.username)
-  localStorage.setItem("userId", String(id))
+  rememberUser(u)
   return u
 }
 
@@ -363,16 +465,13 @@ function diag(config, res, failed) {
     if (failed || !res) {
       const body = res && res.data
       const text = body ? (typeof body === "string" ? body : JSON.stringify(body)).replace(/\s+/g, " ").slice(0, 300) : ""
-      console.log("BCX diag", url, "FAILED, HTTP", res && res.status, text)
       return
     }
     if (/GetCalendarEventsByUser/i.test(url)) {
       const list = (res.data && res.data.d) || []
       const odd = Array.isArray(list) && list.find((e) => e && /[<&]/.test(String(e.longTitleWithoutTime)))
-      if (odd) console.log("BCX diag sample event title:", JSON.stringify(odd.longTitleWithoutTime))
       return
     }
-    console.log("BCX diag", url, "HTTP", res.status, "reply shape:", shapeOf(res.data))
   } catch (e) {
     /* diagnostics must never break the app */
   }

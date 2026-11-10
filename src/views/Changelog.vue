@@ -6,6 +6,67 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v2.0.3 (local fork) </v-card-title>
+          <ul>
+            <li>
+              Fixed Learning Tasks always showing an empty table. The page
+              crashed while drawing the first row (it was reading the task
+              categories before they had loaded) and never recovered.
+            </li>
+            <li>
+              When every task is older than the "Hide Irrelevant Tasks"
+              cut-off, the page now says so and offers to show them all,
+              instead of looking broken. That cut-off is also worked out
+              properly now, rather than by comparing dates as text.
+            </li>
+            <li>
+              BetterCompass now asks Compass who is signed in instead of
+              trusting a user ID saved in this browser. On a shared or
+              borrowed computer it shows the right person straight away, with
+              no error and no reload.
+            </li>
+            <li>
+              Signing out of Compass clears the name, email and timetable kept
+              in this browser, so the next person does not see yours. If your
+              session has ended it now says so plainly, instead of showing an
+              error with Compass's reply in it and a sign-in box that did
+              nothing.
+            </li>
+            <li>
+              Arrow keys no longer move the calendar while you are typing in
+              the search box.
+            </li>
+            <li>
+              The welcome box stays closed once you close it, however you
+              close it.
+            </li>
+            <li>
+              The school's real name is shown instead of its Compass address.
+            </li>
+            <li>
+              A custom background is actually visible now: there is a
+              "Background see-through" slider in Settings &gt; Customization,
+              so it shows through the cards instead of only in the gaps.
+            </li>
+            <li>
+              "What's new" on the home page shows this fork's changes, not the
+              original project's from 2022.
+            </li>
+            <li>
+              Removed the weather widget and its setting. It needed the
+              original BetterCompass server, so it never loaded here.
+            </li>
+            <li>
+              Profile page: no more empty "0" next to your name, and a
+              parent's code is no longer printed twice.
+            </li>
+            <li>
+              Settings no longer claims your settings sync across devices.
+              They are saved in this browser.
+            </li>
+          </ul>
+        </v-container>
+        <v-container>
           <v-card-title> v2.0.2 (local fork) </v-card-title>
           <ul>
             <li>

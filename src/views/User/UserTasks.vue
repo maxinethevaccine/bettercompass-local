@@ -569,6 +569,20 @@
           $vuetify.theme.themes[$vuetify.theme.dark ? 'dark' : 'light'].card
         "
       >
+        <template v-slot:no-data>
+          <div class="pa-6">
+            <template v-if="hideIrrelevantTasks && tasks.length">
+              <p class="mb-2">
+                All {{ tasks.length }} of your learning tasks are older than
+                the "Hide Irrelevant Tasks" cut-off, so none are shown.
+              </p>
+              <v-btn class="rounded-xl" @click="hideIrrelevantTasks = false">
+                Show all tasks
+              </v-btn>
+            </template>
+            <span v-else>No learning tasks.</span>
+          </div>
+        </template>
         <template v-slot:item.tags="{ item }">
           <v-chip-group column>
             <v-chip color="red" v-if="item.important">
@@ -636,6 +650,9 @@ export default {
       },
       page: 1,
       offset: 0,
+      // Was missing, so the very first render of the table threw
+      // ("categories is undefined") and the task list stayed empty for good.
+      categories: [],
       academicGroups: [],
       academicGroupId: null,
       selectedTask: {
@@ -679,13 +696,16 @@ export default {
   computed: {
     computeTasks() {
       if (this.hideIrrelevantTasks) {
-        return this.tasks.filter(
-          (task) =>
-            (task.createdTimestamp > dayjs().subtract(2, "week").format() &&
-              this.getStatusBoolean(task)) ||
-            (task.createdTimestamp > dayjs().subtract(10, "week").format() &&
-              !this.getStatusBoolean(task))
-        )
+        // Compass sends UTC timestamps, so compare them as dates - comparing
+        // the strings got this wrong by up to a day around the cut-off.
+        const submittedCutoff = dayjs().subtract(2, "week")
+        const pendingCutoff = dayjs().subtract(10, "week")
+        return this.tasks.filter((task) => {
+          const created = dayjs(task.createdTimestamp)
+          return this.getStatusBoolean(task)
+            ? created.isAfter(submittedCutoff)
+            : created.isAfter(pendingCutoff)
+        })
       } else {
         return this.tasks
       }
@@ -706,10 +726,11 @@ export default {
           start: 0
         })
         .then((res) => {
-          this.categories = res.data.d
+          this.categories = Array.isArray(res.data.d) ? res.data.d : []
         })
     },
     getCategory(item) {
+      if (!Array.isArray(this.categories)) return null
       const category = this.categories.find(
         (category) => category.categoryId === item.categoryId
       )

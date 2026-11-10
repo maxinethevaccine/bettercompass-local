@@ -133,7 +133,11 @@ Vue.use(VueSanitize, {
   allowProtocolRelative: true,
   enforceHtmlBoundary: false
 })
-Vue.use(require("vue-shortkey"))
+// Without this, the calendar's arrow-key shortcuts fire while you are typing
+// in a search box or a text field.
+Vue.use(require("vue-shortkey"), {
+  prevent: ["input", "textarea", "select", "[contenteditable]"]
+})
 Vue.config.productionTip = false
 Vue.use(VueAxios, axios)
 Vue.use(Toast)
