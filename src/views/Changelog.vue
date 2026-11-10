@@ -6,6 +6,30 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v2.0.0 (local fork) </v-card-title>
+          <ul>
+            <li>
+              Auto-update. Every time you open BetterCompass the extension
+              looks at this fork's latest release on GitHub. If it is newer,
+              it downloads it and shows a "ready - click to reload" button.
+              After that you are on the new version, with no reinstalling.
+              If GitHub cannot be reached, or a downloaded version fails to
+              start, the copy that came with the extension is used.
+            </li>
+            <li>
+              Fonts. Settings &gt; Customization &gt; Fonts lets you pick a
+              font for the whole app and a different one for headings, the
+              sidebar, buttons and tabs, the calendar, tables and text
+              boxes. You can change the text size, type the name of any font
+              installed on your computer, or upload a font file.
+            </li>
+            <li>
+              About page: shows which version is running and has a "Check
+              for updates now" button.
+            </li>
+          </ul>
+        </v-container>
+        <v-container>
           <v-card-title> v1.9.0 (local fork) </v-card-title>
           <ul>
             <li>

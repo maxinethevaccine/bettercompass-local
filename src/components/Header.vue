@@ -119,9 +119,9 @@
           </v-btn>
         </template>
         <span v-if="updateInfo.updateAvailable">
-          v{{ updateInfo.latestVersion }} is out (you're on v{{
+          v{{ updateInfo.latestVersion }} has been downloaded (you're on v{{
             updateInfo.currentVersion
-          }}) - click to download it
+          }}) - reload the page to use it
         </span>
         <span v-else>Source on GitHub</span>
       </v-tooltip>
@@ -399,7 +399,12 @@
 </template>
 
 <script>
-import { checkForUpdate, UPDATE_REPO_URL } from "@/lib/updateCheck"
+import {
+  UPDATE_REPO_URL,
+  runningVersion,
+  updateReadyVersion,
+  onUpdateReady
+} from "@/lib/updateCheck"
 
 export default {
   name: "Header",
@@ -527,9 +532,20 @@ export default {
     if (this.$vuetify.breakpoint.mobile) {
       this.drawer = false
     }
-    checkForUpdate().then((info) => {
-      this.updateInfo = info
-    })
+    const showUpdate = (version) => {
+      if (!version) return
+      this.updateInfo = {
+        updateAvailable: true,
+        latestVersion: version,
+        releaseUrl: UPDATE_REPO_URL + "/releases",
+        currentVersion: runningVersion()
+      }
+    }
+    showUpdate(updateReadyVersion())
+    this.stopUpdateListener = onUpdateReady(showUpdate)
+  },
+  beforeDestroy() {
+    if (this.stopUpdateListener) this.stopUpdateListener()
   },
   watch: {
     "$store.state.user.bcUser"() {

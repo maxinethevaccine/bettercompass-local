@@ -45,7 +45,15 @@
             >BetterCompass version: {{ $store.state.versioning.version }}, built
             on: {{ $store.state.versioning.date }}</small
           ><br />
-          <small>Fixed by Max, version {{ extensionVersion }}</small>
+          <small
+            >Fixed by Max, version {{ extensionVersion }} ({{
+              sourceLabel
+            }})</small
+          ><br />
+          <v-btn small class="rounded-xl mt-3" @click="checkForUpdates">
+            <v-icon left small>mdi-update</v-icon>
+            {{ checkLabel }}
+          </v-btn>
         </v-container>
       </v-card>
     </v-container>
@@ -53,7 +61,14 @@
 </template>
 
 <script>
-import { UPDATE_REPO_URL, runningVersion } from "@/lib/updateCheck"
+import {
+  UPDATE_REPO_URL,
+  runningVersion,
+  runningSource,
+  updateReadyVersion,
+  onUpdateReady,
+  checkNow
+} from "@/lib/updateCheck"
 
 export default {
   name: "About",
@@ -62,10 +77,44 @@ export default {
       return UPDATE_REPO_URL
     },
     extensionVersion() {
-      // The version actually running (which may be newer than the
-      // installed extension's own manifest version, if bootstrap.js
-      // fetched a newer build from GitHub this load).
       return runningVersion() || "unknown"
+    },
+    sourceLabel() {
+      return runningSource() === "github"
+        ? "auto-updated from GitHub"
+        : "the copy that came with the extension"
+    },
+    checkLabel() {
+      if (this.ready) return "v" + this.ready + " downloaded - reload to use it"
+      if (this.checking) return "Checking GitHub..."
+      return this.checked ? "No newer version found" : "Check for updates now"
+    }
+  },
+  data() {
+    return {
+      checking: false,
+      checked: false,
+      ready: updateReadyVersion()
+    }
+  },
+  mounted() {
+    this.stopUpdateListener = onUpdateReady((version) => {
+      this.ready = version
+      this.checking = false
+    })
+  },
+  beforeDestroy() {
+    if (this.stopUpdateListener) this.stopUpdateListener()
+  },
+  methods: {
+    checkForUpdates() {
+      if (this.ready) return window.location.reload()
+      this.checking = true
+      checkNow()
+      setTimeout(() => {
+        if (this.checking) this.checked = true
+        this.checking = false
+      }, 8000)
     }
   }
 }

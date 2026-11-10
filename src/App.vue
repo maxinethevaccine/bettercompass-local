@@ -277,6 +277,7 @@ import Header from "./components/Header.vue"
 import AjaxErrorHandler from "@/lib/errorHandler"
 import Vue from "vue"
 import Vuetify from "@/plugins/vuetify"
+import { applyFonts } from "@/lib/fonts"
 export default {
   name: "App",
   components: {
@@ -441,6 +442,9 @@ export default {
     }
   },
   mounted() {
+    // Tells the extension's loader that this copy of the app started, so a
+    // downloaded version that fails to start can be dropped.
+    document.documentElement.dataset.bcxBooted = "1"
     window.addEventListener("offline", () => {
       this.$store.commit("setOnline", false)
       this.$store.dispatch("getState")
@@ -512,6 +516,13 @@ export default {
       })
   },
   watch: {
+    "$store.state.user.bcUser.fonts": {
+      handler(fonts) {
+        applyFonts(fonts)
+      },
+      deep: true,
+      immediate: true
+    },
     "$store.state.user.bcUser.theme": {
       handler() {
         this.$vuetify.theme.dark =

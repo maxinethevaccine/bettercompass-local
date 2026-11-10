@@ -3,8 +3,8 @@
 A Chrome extension that runs [Troplo's BetterCompass](https://github.com/Troplo/BetterCompass)
 frontend directly inside your own, already-logged-in Compass session.
 
-**No proxy, no external servers** - except one request to this repo's GitHub
-Releases to see whether a newer version exists. It never talks to the
+**No proxy.** The only outside server it contacts is GitHub, to download
+newer versions of itself from this repo's releases. It never talks to the
 original author's infrastructure.
 
 This is a personal fork, hardcoded to one school's Compass domain
@@ -21,12 +21,34 @@ school's domain before it'll load.
 4. Log in to Compass as normal, then go to
    `https://<your-school>.compass.education/bettercompass` to use it.
 
-A GitHub icon in the top bar shows a dot when a newer version has been
-published here. Updating is manual: download the new zip, replace the folder,
-and press reload on `chrome://extensions`. (Chrome does not let an extension
-loaded this way run code it has downloaded, so it cannot update itself.)
+## Auto-update
 
-The update check only works while this repository is public.
+You install the zip once. After that, every time you open BetterCompass the
+extension looks at this repo's latest release. If it is newer, it downloads
+`app.js` and `app.css` from it and shows a "ready - click to reload" button.
+About > "Check for updates now" does the same check on demand.
+
+If GitHub cannot be reached, or a downloaded version fails to start, the copy
+that came inside the extension is used instead.
+
+Not covered by auto-update: `manifest.json`, `background.js`, `loader.js`,
+`launcher.js` and `finder.js`. Chrome reads those from the installed folder,
+so a change to them needs the new zip and a reload on `chrome://extensions`.
+
+Anyone who can publish a release here can change the code that runs in every
+user's Compass session, so keep this GitHub account secure.
+
+## Publishing a release
+
+1. Build (see below).
+2. Create a release whose tag is the new version, e.g. `v2.0.1`. It must be
+   higher than the last one.
+3. Attach three files with exactly these names:
+   - `app.js` (from `extension/app/js/app.js`)
+   - `app.css` (from `extension/app/css/app.css`)
+   - `BetterCompass-extension.zip` (the whole `extension` folder, for new installs)
+
+The repo must be public, or nobody's extension can see the release.
 
 ## What's different from the original
 

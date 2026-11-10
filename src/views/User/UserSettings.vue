@@ -393,6 +393,110 @@
         </template>
         <small>Only visible to you, and stored on this device.</small>
       </v-card-text>
+      <v-card-text id="bcx-font-settings">
+        <h3 class="mb-2">Fonts</h3>
+        <p class="mb-3">
+          Pick a font for the whole app, then give any part its own font if
+          you want. Parts set to "Same as Everything" follow the main font.
+        </p>
+        <v-row dense>
+          <v-col cols="12" md="6" v-for="area in fontAreas" :key="area.key">
+            <v-select
+              :label="area.name"
+              :items="fontItems(area)"
+              item-text="name"
+              item-value="value"
+              :value="fonts[area.key]"
+              @change="setFont(area.key, $event)"
+              outlined
+              dense
+              hide-details
+              class="mb-2"
+            >
+              <template v-slot:item="{ item }">
+                <span :style="{ fontFamily: item.value || 'Roboto, sans-serif' }">
+                  {{ item.name }}
+                </span>
+              </template>
+            </v-select>
+          </v-col>
+        </v-row>
+        <p class="mt-4 mb-0">Text size: {{ fonts.scale }}%</p>
+        <v-slider
+          :value="fonts.scale"
+          @change="setFont('scale', $event)"
+          min="75"
+          max="140"
+          step="5"
+          thumb-label
+          hide-details
+        ></v-slider>
+        <h4 class="mt-4 mb-2">Use a font that is not in the list</h4>
+        <v-row dense align="center">
+          <v-col cols="12" md="7">
+            <v-text-field
+              v-model="customFontName"
+              label="Name of a font installed on this computer"
+              placeholder="e.g. Futura"
+              outlined
+              dense
+              hide-details
+              @keyup.enter="addCustomFont"
+            ></v-text-field>
+          </v-col>
+          <v-col cols="12" md="5">
+            <v-btn class="rounded-xl" @click="addCustomFont">
+              <v-icon left>mdi-plus</v-icon>
+              Add to the list
+            </v-btn>
+          </v-col>
+        </v-row>
+        <div class="mt-2" v-if="fonts.custom.length">
+          <v-chip
+            v-for="name in fonts.custom"
+            :key="name"
+            close
+            class="mr-2 mb-2"
+            @click:close="removeCustomFont(name)"
+            >{{ name }}</v-chip
+          >
+        </div>
+        <div class="mt-3">
+          <v-btn
+            class="rounded-xl mr-2"
+            :loading="fontUploading"
+            @click="$refs.fontFile.click()"
+          >
+            <v-icon left>mdi-upload</v-icon>
+            Upload a font file
+          </v-btn>
+          <v-btn
+            v-if="fonts.uploaded"
+            text
+            class="rounded-xl mr-2"
+            @click="removeUploadedFont"
+          >
+            Remove "{{ fonts.uploaded.name }}"
+          </v-btn>
+          <v-btn text class="rounded-xl" @click="resetFonts">
+            Reset all fonts
+          </v-btn>
+          <input
+            ref="fontFile"
+            type="file"
+            accept=".ttf,.otf,.woff,.woff2"
+            style="display: none"
+            @change="onFontFileChange"
+          />
+        </div>
+        <v-alert v-if="fontError" type="error" text dense class="mt-2">
+          {{ fontError }}
+        </v-alert>
+        <small class="d-block mt-2"
+          >Font files (.ttf, .otf, .woff, .woff2, up to 1 MB) are stored on
+          this device only. Icons always keep their own font.</small
+        >
+      </v-card-text>
       <v-card-text>
         <v-switch
           @change="saveSettings"
@@ -593,6 +697,15 @@
 <script>
 import AjaxErrorHandler from "@/lib/errorHandler"
 import { fileToResizedDataUrl } from "@/lib/imageUpload"
+import {
+  FONT_AREAS,
+  defaultFonts,
+  fontChoices,
+  cleanFontName,
+  customFontValue,
+  uploadedFontValue,
+  readFontFile
+} from "@/lib/fonts"
 
 export default {
   name: "Settings",
@@ -607,6 +720,10 @@ export default {
       avatarError: "",
       backgroundUploading: false,
       backgroundError: "",
+      fontAreas: FONT_AREAS,
+      customFontName: "",
+      fontUploading: false,
+      fontError: "",
       defineAccent: false,
       alternateCreationType: false,
       createAccountDialog: false,
@@ -670,6 +787,13 @@ export default {
     }
   },
   computed: {
+    fonts() {
+      // Older saved settings have no font choices yet.
+      return {
+        ...defaultFonts(),
+        ...(this.$store.state.user.bcUser?.fonts || {})
+      }
+    },
     creatorJSON: {
       get() {
         return JSON.stringify(this.creator)
@@ -1094,6 +1218,81 @@ export default {
           this.backgroundUploading = false
           this.backgroundError = err.message
         })
+    },
+    fontItems(area) {
+      const items = fontChoices(this.fonts)
+      if (area.key === "base") return items
+      return [{ name: "Same as Everything", value: "" }].concat(items.slice(1))
+    },
+    saveFonts(next) {
+      this.$set(this.$store.state.user.bcUser, "fonts", next)
+      this.saveSettings()
+    },
+    setFont(key, value) {
+      this.saveFonts({ ...this.fonts, [key]: value == null ? "" : value })
+    },
+    addCustomFont() {
+      const name = cleanFontName(this.customFontName)
+      this.fontError = ""
+      if (!name) {
+        this.fontError = "Type the name of a font first."
+        return
+      }
+      this.customFontName = ""
+      const custom = this.fonts.custom.filter(
+        (n) => n.toLowerCase() !== name.toLowerCase()
+      )
+      custom.push(name)
+      // A newly added font becomes the main font straight away, so it is
+      // obvious whether this computer actually has it.
+      this.saveFonts({
+        ...this.fonts,
+        custom: custom.slice(-12),
+        base: customFontValue(name)
+      })
+    },
+    removeCustomFont(name) {
+      const value = customFontValue(name)
+      const next = {
+        ...this.fonts,
+        custom: this.fonts.custom.filter((n) => n !== name)
+      }
+      this.fontAreas.forEach((a) => {
+        if (next[a.key] === value) next[a.key] = ""
+      })
+      this.saveFonts(next)
+    },
+    onFontFileChange(e) {
+      const file = e.target.files && e.target.files[0]
+      e.target.value = ""
+      if (!file) return
+      this.fontError = ""
+      this.fontUploading = true
+      readFontFile(file)
+        .then((uploaded) => {
+          this.fontUploading = false
+          this.saveFonts({
+            ...this.fonts,
+            uploaded,
+            base: uploadedFontValue()
+          })
+        })
+        .catch((err) => {
+          this.fontUploading = false
+          this.fontError = err.message
+        })
+    },
+    removeUploadedFont() {
+      const value = uploadedFontValue()
+      const next = { ...this.fonts, uploaded: null }
+      this.fontAreas.forEach((a) => {
+        if (next[a.key] === value) next[a.key] = ""
+      })
+      this.saveFonts(next)
+    },
+    resetFonts() {
+      this.fontError = ""
+      this.saveFonts(defaultFonts())
     },
     removeBackground() {
       this.$store.state.user.bcUser.customBackground = null

@@ -95,5 +95,17 @@
  ],
  "calendars": null,
  "bookmarks": [],
- "admin": false
+ "admin": false,
+ "fonts": {
+  "base": "",
+  "headings": "",
+  "nav": "",
+  "buttons": "",
+  "calendar": "",
+  "tables": "",
+  "inputs": "",
+  "scale": 100,
+  "custom": [],
+  "uploaded": null
+ }
 }
