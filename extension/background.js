@@ -31,15 +31,13 @@ const bundledVersion = chrome.runtime.getManifest().version
 let bundled = null
 let checking = null
 
-async function getBundled() {
-  if (!bundled) {
-    const [js, css] = await Promise.all([
-      fetch(chrome.runtime.getURL("app/js/app.js")).then((r) => r.text()),
-      fetch(chrome.runtime.getURL("app/css/app.css")).then((r) => r.text())
-    ])
-    bundled = { version: bundledVersion, source: "bundled", js, css }
-  }
-  return bundled
+// The copy inside the extension. Chrome loads these files itself, by path -
+// nothing here reads their contents, so this cannot fail the way reading
+// them could (v2.0.0 and v2.0.1 read them with fetch(), which died with
+// "Failed to fetch" if the folder on disk had been swapped under a running
+// Chrome, leaving the page dead).
+function bundledApp() {
+  return { version: bundledVersion, source: "bundled" }
 }
 
 // The downloaded copy, if it is newer than the bundled one and has not
@@ -114,21 +112,43 @@ function checkInBackground(tabId, force) {
   })
 }
 
-// Runs inside the page. Chrome does not let a content script run downloaded
-// code, but the page itself may, so the app is started as a page script.
-function startApp(code, version, source) {
+// Marks which version is running, for the app and for loader.js.
+function markVersion(version, source) {
+  document.documentElement.dataset.bcxVersion = version
+  document.documentElement.dataset.bcxSource = source
+}
+
+// Runs a downloaded copy. Chrome does not let a content script run
+// downloaded code, but the page itself may, so it goes in as a page script.
+function startDownloadedApp(code, version, source) {
   document.documentElement.dataset.bcxVersion = version
   document.documentElement.dataset.bcxSource = source
   ;(0, eval)(code)
 }
 
-async function putAppInTab(tabId, app) {
+async function putBundledInTab(tabId) {
+  const target = { tabId }
+  await chrome.scripting.insertCSS({ target, files: ["app/css/app.css"] })
+  await chrome.scripting.executeScript({
+    target,
+    world: "MAIN",
+    func: markVersion,
+    args: [bundledVersion, "bundled"]
+  })
+  await chrome.scripting.executeScript({
+    target,
+    world: "MAIN",
+    files: ["app/js/app.js"]
+  })
+}
+
+async function putDownloadedInTab(tabId, app) {
   const target = { tabId }
   await chrome.scripting.insertCSS({ target, css: app.css })
   await chrome.scripting.executeScript({
     target,
     world: "MAIN",
-    func: startApp,
+    func: startDownloadedApp,
     args: [app.js, app.version, app.source]
   })
 }
@@ -138,15 +158,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "bcx-get-app") {
     const tabId = sender.tab && sender.tab.id
     ;(async () => {
-      let app = null
+      let downloaded = null
       try {
-        app = await getDownloaded()
+        downloaded = await getDownloaded()
       } catch (e) {}
-      if (!app) app = await getBundled()
-      await putAppInTab(tabId, app)
+
+      if (downloaded) {
+        try {
+          await putDownloadedInTab(tabId, downloaded)
+          sendResponse({ version: downloaded.version, source: downloaded.source })
+          checkInBackground(tabId, false)
+          return
+        } catch (e) {
+          // A downloaded copy that will not even go into the page is no
+          // use: drop it and fall through to the bundled one.
+          await chrome.storage.local.remove("remote").catch(() => {})
+        }
+      }
+
+      const app = bundledApp()
+      await putBundledInTab(tabId)
       sendResponse({ version: app.version, source: app.source })
       checkInBackground(tabId, false)
-    })().catch((e) => sendResponse({ error: String(e && e.message) }))
+    })().catch((e) => sendResponse({ error: String((e && e.message) || e) }))
     return true
   }
   if (msg.type === "bcx-bad-version") {

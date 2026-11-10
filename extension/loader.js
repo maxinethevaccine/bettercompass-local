@@ -34,14 +34,47 @@
     })
   })
 
-  chrome.runtime.sendMessage({ type: "bcx-get-app" }, function (started) {
-    if (chrome.runtime.lastError || !started || started.error) {
-      console.error(
-        "BetterCompass: could not start the app.",
-        chrome.runtime.lastError || (started && started.error)
-      )
-      return
-    }
+  function showFailure(detail) {
+    console.error("BetterCompass: could not start the app.", detail)
+    if (document.getElementById("bcx-failed")) return
+    var box = document.createElement("div")
+    box.id = "bcx-failed"
+    box.style.cssText =
+      "position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;" +
+      "justify-content:center;background:#151515;color:#fff;" +
+      "font:16px/1.6 system-ui,-apple-system,sans-serif;text-align:center;padding:24px"
+    box.innerHTML =
+      '<div style="max-width:460px">' +
+      '<div style="font-size:20px;margin-bottom:12px">BetterCompass could not start</div>' +
+      "<p>This usually means Chrome is still holding an older copy of the " +
+      "extension. Open <b>chrome://extensions</b>, press <b>Reload</b> on " +
+      "BetterCompass, then reload this page.</p>" +
+      '<p style="opacity:.6;font-size:13px">' +
+      String(detail || "").slice(0, 200) +
+      "</p></div>"
+    ;(document.body || document.documentElement).appendChild(box)
+  }
+
+  function requestApp(attempt) {
+    chrome.runtime.sendMessage({ type: "bcx-get-app" }, function (started) {
+      var problem = chrome.runtime.lastError
+        ? chrome.runtime.lastError.message
+        : !started
+        ? "no answer from the extension"
+        : started.error
+      if (problem) {
+        // The worker may just have been asleep; give it one more go before
+        // telling anyone off.
+        if (attempt < 1) return setTimeout(function () {
+          requestApp(attempt + 1)
+        }, 1200)
+        return showFailure(problem)
+      }
+      watchDownloaded(started)
+    })
+  }
+
+  function watchDownloaded(started) {
     if (started.source !== "github") return
     // If a downloaded version never starts, stop using it and go back to
     // the bundled one, so a bad release cannot lock anyone out.
@@ -55,5 +88,7 @@
         }
       )
     }, BOOT_TIMEOUT_MS)
-  })
+  }
+
+  requestApp(0)
 })()

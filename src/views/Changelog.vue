@@ -6,6 +6,23 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v2.0.2 (local fork) </v-card-title>
+          <ul>
+            <li>
+              Fixed BetterCompass refusing to start after updating to v2.0.0
+              or v2.0.1 ("could not start the app. Failed to fetch", then
+              Compass's own 404 page). Those versions read the app's files
+              before running them, which fails if the extension folder is
+              replaced while Chrome still has the old copy loaded. Chrome
+              now loads those files itself, so there is nothing to fail.
+            </li>
+            <li>
+              If it ever cannot start, it now says so on the page, with what
+              to do about it, instead of leaving Compass's 404 showing.
+            </li>
+          </ul>
+        </v-container>
+        <v-container>
           <v-card-title> v2.0.1 (local fork) </v-card-title>
           <ul>
             <li>
