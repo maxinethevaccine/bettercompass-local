@@ -2,14 +2,9 @@
 // short edit per release, next to the version number in the manifest, rather
 // than buried in the page.
 export const LATEST_CHANGES = {
-  version: "2.0.4",
+  version: "2.0.5",
   items: [
-    "Updates now come from the release zip, so publishing one only needs that single file attached.",
-    "Learning Tasks no longer looks empty: when everything is older than the \"Hide Irrelevant Tasks\" cut-off it now says so, with a button to show them all.",
-    "BetterCompass now asks Compass who is signed in, instead of trusting a user ID left in this browser - so a shared or borrowed computer shows the right person, with no reload.",
-    "Signing out of Compass clears the name, email and timetable kept in this browser.",
-    "Arrow keys no longer move the calendar while you are typing in a search box.",
-    "The welcome box stays closed once you close it, however you close it.",
-    "The school's real name is used instead of its Compass address."
+    "New switch in Settings > Customization: \"Show the background behind everything\". Cards, the sidebar and the top bar lose their colour so your picture fills the whole page, and the text stays fully solid on top of it.",
+    "With that switch on, Dim lightens the picture on a light theme and darkens it on a dark one, so text stays readable either way."
   ]
 }

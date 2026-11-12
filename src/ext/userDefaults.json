@@ -99,5 +99,6 @@
   "custom": [],
   "uploaded": null
  },
- "customBackgroundOpacity": 25
+ "customBackgroundOpacity": 25,
+  "customBackgroundFull": false
 }

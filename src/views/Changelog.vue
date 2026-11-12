@@ -6,6 +6,22 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v2.0.5 (local fork) </v-card-title>
+          <ul>
+            <li>
+              New switch in Settings &gt; Customization, under the background
+              picture: "Show the background behind everything". Cards, the
+              sidebar and the top bar lose their colour, so the picture fills
+              the whole page and the text sits on top of it at full strength.
+              Pop-ups and menus stay solid.
+            </li>
+            <li>
+              With the switch on, Dim lightens the picture on a light theme
+              and darkens it on a dark one, so text stays readable either
+              way. The old "Background see-through" slider is still there
+              when the switch is off.
+            </li>
+          </ul>
           <v-card-title> v2.0.4 (local fork) </v-card-title>
           <ul>
             <li>

@@ -389,6 +389,21 @@
             max="20"
             thumb-label
           ></v-slider>
+          <v-switch
+            id="bcx-bg-full-switch"
+            v-model="$store.state.user.bcUser.customBackgroundFull"
+            @change="saveSettings"
+            inset
+            hide-details
+            class="mt-0 mb-3"
+            label="Show the background behind everything"
+          ></v-switch>
+          <small class="d-block mb-3">
+            Cards, the sidebar and the top bar lose their colour, so the
+            picture fills the whole page and the text sits on top of it. If
+            text gets hard to read, turn Dim or Blur up.
+          </small>
+        <template v-if="!$store.state.user.bcUser.customBackgroundFull">
         <p class="mt-2 mb-0">
           Background see-through:
           {{ $store.state.user.bcUser.customBackgroundOpacity ?? 25 }}%
@@ -402,6 +417,7 @@
           hide-details
           label="See-through"
         ></v-slider>
+        </template>
         </template>
         <small>Only visible to you, and stored on this device.</small>
       </v-card-text>

@@ -41,7 +41,7 @@ user's Compass session, so keep this GitHub account secure.
 ## Publishing a release
 
 1. Build (see below).
-2. Create a release whose tag is the new version, e.g. `v2.0.5`. It must be
+2. Create a release whose tag is the new version, e.g. `v2.0.6`. It must be
    higher than the last one.
 3. Attach `BetterCompass-extension.zip` (the whole `extension` folder zipped).
    That one file is enough: the updater reads `app.js` and `app.css` out of

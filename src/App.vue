@@ -1,5 +1,11 @@
 <template>
-  <v-app :style="appStyle" :class="{ 'bcx-has-bg': !!customBackground }">
+  <v-app
+    :style="appStyle"
+    :class="{
+      'bcx-has-bg': !!customBackground && !customBackgroundFull,
+      'bcx-bg-full': !!customBackground && customBackgroundFull
+    }"
+  >
     <div
       v-if="customBackground"
       class="bcx-custom-bg"
@@ -283,6 +289,52 @@
 .bcx-has-bg .v-menu__content .v-list {
   opacity: 1;
 }
+/* "Show the background behind everything" (Settings > Customization).
+   Instead of fading whole cards (which fades their text too), the coloured
+   part of every surface is removed, so the picture is the page and the text
+   sits on top of it at full strength. Vuetify sets theme colours with
+   !important, so these need it too, and the longer selector to win. */
+.v-application.bcx-bg-full .v-main .v-card,
+.v-application.bcx-bg-full .v-main .v-sheet:not(.v-alert),
+.v-application.bcx-bg-full .v-main .v-toolbar,
+.v-application.bcx-bg-full .v-main .v-data-table,
+.v-application.bcx-bg-full .v-main .v-list,
+.v-application.bcx-bg-full .v-main .v-tabs-bar,
+.v-application.bcx-bg-full .v-main .v-tabs-items,
+.v-application.bcx-bg-full .v-main .v-expansion-panel,
+.v-application.bcx-bg-full .v-main .v-stepper,
+.v-application.bcx-bg-full .v-main .v-footer,
+.v-application.bcx-bg-full .v-main .v-calendar,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-daily__head,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-daily__body,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-daily__intervals-head,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-daily__intervals-body,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-daily_head-day,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-daily__day,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-weekly__head-weekday,
+.v-application.bcx-bg-full .v-main .v-calendar .v-calendar-weekly__day,
+.v-application.bcx-bg-full .v-main .v-data-table tbody tr:hover,
+.v-application.bcx-bg-full
+  .v-navigation-drawer:not(.v-navigation-drawer--is-mobile) {
+  background-color: transparent !important;
+  background-image: none !important;
+  opacity: 1;
+}
+.v-application.bcx-bg-full .v-main .v-card,
+.v-application.bcx-bg-full .v-main .v-sheet:not(.v-alert),
+.v-application.bcx-bg-full
+  .v-navigation-drawer:not(.v-navigation-drawer--is-mobile) {
+  box-shadow: none !important;
+}
+/* The top bar stays put while the page scrolls underneath it, so a fully
+   clear one would have page text running through its own. Frosted instead:
+   the picture still shows, whatever scrolls under it is blurred out. */
+.v-application.bcx-bg-full .v-app-bar {
+  background-color: rgba(128, 128, 128, 0.12) !important;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: none !important;
+}
 </style>
 <script>
 import Header from "./components/Header.vue"
@@ -313,6 +365,9 @@ export default {
   computed: {
     customBackground() {
       return this.$store.state.user.bcUser?.customBackground || null
+    },
+    customBackgroundFull() {
+      return !!this.$store.state.user.bcUser?.customBackgroundFull
     },
     appStyle() {
       // When a custom background is set, the app shell itself goes
@@ -347,8 +402,15 @@ export default {
     },
     customBackgroundDimStyle() {
       const dim = this.$store.state.user.bcUser?.customBackgroundDim ?? 35
+      // With the background behind everything, the text sits straight on the
+      // picture, so "Dim" has to push the picture away from the text colour:
+      // towards black on a dark theme, towards white on a light one.
+      const tone =
+        this.customBackgroundFull && !this.$vuetify.theme.dark
+          ? "255, 255, 255"
+          : "0, 0, 0"
       return {
-        backgroundColor: "rgba(0, 0, 0, " + dim / 100 + ")"
+        backgroundColor: "rgba(" + tone + ", " + dim / 100 + ")"
       }
     },
     surfaceOpacityStyle() {
