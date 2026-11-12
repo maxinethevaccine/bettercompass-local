@@ -396,11 +396,12 @@
             inset
             hide-details
             class="mt-0 mb-3"
-            label="Show the background behind everything"
+            label="Show the background behind the main area"
           ></v-switch>
           <small class="d-block mb-3">
-            Cards, the sidebar and the top bar lose their colour, so the
-            picture fills the whole page and the text sits on top of it. If
+            Everything in the main area loses its colour, so the picture
+            fills it and the text sits on top. The sidebar and top bar stay
+            solid. If
             text gets hard to read, turn Dim or Blur up.
           </small>
         <template v-if="!$store.state.user.bcUser.customBackgroundFull">

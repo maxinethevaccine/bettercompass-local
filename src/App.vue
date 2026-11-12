@@ -289,10 +289,10 @@
 .bcx-has-bg .v-menu__content .v-list {
   opacity: 1;
 }
-/* "Show the background behind everything" (Settings > Customization).
+/* "Show the background behind the main area" (Settings > Customization).
    Instead of fading whole cards (which fades their text too), the coloured
-   part of every surface is removed, so the picture is the page and the text
-   sits on top of it at full strength. Vuetify sets theme colours with
+   part of every surface in the main area is removed, so the picture is the
+   page there and the text sits on top of it at full strength. Vuetify sets theme colours with
    !important, so these need it too, and the longer selector to win. */
 .v-application.bcx-bg-full .v-main .v-card,
 .v-application.bcx-bg-full .v-main .v-sheet:not(.v-alert),
@@ -313,28 +313,17 @@
 .v-application.bcx-bg-full .v-main .v-calendar .v-calendar-daily__day,
 .v-application.bcx-bg-full .v-main .v-calendar .v-calendar-weekly__head-weekday,
 .v-application.bcx-bg-full .v-main .v-calendar .v-calendar-weekly__day,
-.v-application.bcx-bg-full .v-main .v-data-table tbody tr:hover,
-.v-application.bcx-bg-full
-  .v-navigation-drawer:not(.v-navigation-drawer--is-mobile) {
+.v-application.bcx-bg-full .v-main .v-data-table tbody tr:hover {
   background-color: transparent !important;
   background-image: none !important;
   opacity: 1;
 }
 .v-application.bcx-bg-full .v-main .v-card,
-.v-application.bcx-bg-full .v-main .v-sheet:not(.v-alert),
-.v-application.bcx-bg-full
-  .v-navigation-drawer:not(.v-navigation-drawer--is-mobile) {
+.v-application.bcx-bg-full .v-main .v-sheet:not(.v-alert) {
   box-shadow: none !important;
 }
-/* The top bar stays put while the page scrolls underneath it, so a fully
-   clear one would have page text running through its own. Frosted instead:
-   the picture still shows, whatever scrolls under it is blurred out. */
-.v-application.bcx-bg-full .v-app-bar {
-  background-color: rgba(128, 128, 128, 0.12) !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: none !important;
-}
+/* Only the main area goes clear. The sidebar and top bar keep their normal
+   solid colour (no rule here, so the theme's own colour applies). */
 </style>
 <script>
 import Header from "./components/Header.vue"
