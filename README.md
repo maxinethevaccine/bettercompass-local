@@ -25,15 +25,17 @@ school's domain before it'll load.
 
 You install the zip once. After that, every time you open BetterCompass the
 extension looks at this repo's latest release. If it is newer, it downloads
-`app.js` and `app.css` from it and shows a "ready - click to reload" button.
-About > "Check for updates now" does the same check on demand.
+`app.js`, `app.css` and `page.js` out of the release zip and shows a
+"ready - click to reload" button. About > "Check for updates now" does the
+same check on demand.
 
 If GitHub cannot be reached, or a downloaded version fails to start, the copy
 that came inside the extension is used instead.
 
-Not covered by auto-update: `manifest.json`, `background.js`, `loader.js`,
-`launcher.js` and `finder.js`. Chrome reads those from the installed folder,
-so a change to them needs the new zip and a reload on `chrome://extensions`.
+Not covered by auto-update: `manifest.json`, `background.js` and the two
+small starter scripts `loader.js` and `launcher.js`. Chrome reads those from
+the installed folder, so a change to them needs the new zip and a reload on
+`chrome://extensions`.
 
 Anyone who can publish a release here can change the code that runs in every
 user's Compass session, so keep this GitHub account secure.
@@ -41,11 +43,11 @@ user's Compass session, so keep this GitHub account secure.
 ## Publishing a release
 
 1. Build (see below).
-2. Create a release whose tag is the new version, e.g. `v2.0.6`. It must be
+2. Create a release whose tag is the new version, e.g. `v2.0.7`. It must be
    higher than the last one.
 3. Attach `BetterCompass-extension.zip` (the whole `extension` folder zipped).
-   That one file is enough: the updater reads `app.js` and `app.css` out of
-   it. Loose `app.js`/`app.css` files are still read if they are attached, so
+   That one file is enough: the updater reads `app.js`, `app.css` and
+   `page.js` out of it. Loose `app.js`/`app.css` files are still read if they are attached, so
    versions before 2.0.4 can update too.
 
 The repo must be public, or nobody's extension can see the release.

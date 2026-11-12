@@ -6,6 +6,21 @@
           <v-toolbar-title>BetterCompass Changelog</v-toolbar-title>
         </v-toolbar>
         <v-container>
+          <v-card-title> v2.0.6 (local fork) </v-card-title>
+          <ul>
+            <li>
+              More of the extension updates itself. What ordinary Compass
+              pages get (the BetterCompass button, and noting who is signed
+              in) moved into one file, page.js, which is now downloaded from
+              the release zip along with the app. Only manifest.json,
+              background.js and two small starter scripts still need a new
+              zip and a Reload on chrome://extensions when they change.
+            </li>
+            <li>
+              Getting this version itself needs the new zip once, because it
+              changes those fixed files.
+            </li>
+          </ul>
           <v-card-title> v2.0.5 (local fork) </v-card-title>
           <ul>
             <li>

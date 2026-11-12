@@ -1,13 +1,9 @@
-// Adds a small "BetterCompass" button to normal Compass pages.
-(function () {
-  if (window.top !== window.self || document.getElementById("bc-launcher")) return
-  const host = document.createElement("div")
-  host.id = "bc-launcher"
-  host.style.cssText = "position:fixed;left:12px;bottom:12px;z-index:2147483647;"
-  const root = host.attachShadow({ mode: "closed" })
-  root.innerHTML =
-    '<style>a{display:block;font:600 13px/1 system-ui,sans-serif;color:#fff;background:#0190ea;' +
-    "padding:10px 14px;border-radius:20px;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.35);" +
-    'opacity:.85}a:hover{opacity:1}</style><a href="/bettercompass">BetterCompass</a>'
-  document.documentElement.appendChild(host)
-})()
+// Runs on ordinary Compass pages. All it does is ask background.js to put
+// page.js into the page - the newest copy it has, downloaded or bundled.
+// Everything those pages actually get (the BetterCompass button, noting who
+// is signed in) lives in page.js so it can update without a reinstall.
+if (window.top === window.self) {
+  chrome.runtime.sendMessage({ type: "bcx-get-page" }, function () {
+    void chrome.runtime.lastError
+  })
+}

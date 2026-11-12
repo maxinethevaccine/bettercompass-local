@@ -5,9 +5,10 @@
 // this background worker downloads the newest app.js / app.css from this
 // fork's latest GitHub release and keeps them in extension storage, and
 // starts whichever copy is newest (downloaded or bundled) in the page when
-// loader.js asks for it. So the BetterCompass app updates itself; only manifest.json,
-// loader.js, launcher.js, finder.js and this file still need a manual
-// reinstall when they change.
+// loader.js asks for it. page.js (what ordinary Compass pages get) updates
+// the same way. So only manifest.json, this file and the two small starter
+// scripts, loader.js and launcher.js, still need a manual reinstall when
+// they change.
 
 const REPO = "maxinethevaccine/bettercompass-local"
 const LATEST_URL = "https://github.com/" + REPO + "/releases/latest"
@@ -51,7 +52,13 @@ async function getDownloaded() {
     return null
   }
   if ((s.bad || []).includes(remote.version)) return null
-  return { version: remote.version, source: "github", js: remote.js, css: remote.css }
+  return {
+    version: remote.version,
+    source: "github",
+    js: remote.js,
+    css: remote.css,
+    page: remote.page || null
+  }
 }
 
 // Reads one file out of a .zip, using the browser's own decompression - the
@@ -96,6 +103,15 @@ async function fileFromZip(buf, wanted) {
   return null
 }
 
+// page.js is optional in a release (older ones do not have it). Anything
+// that does not look like a script is ignored and the bundled one is used.
+function usablePage(page) {
+  if (typeof page !== "string") return null
+  const t = page.trim()
+  if (t.length < 20 || t.length > 200 * 1024 || t.startsWith("<")) return null
+  return page
+}
+
 // Gets the app's files out of a release: from the zip if it is there,
 // otherwise from app.js/app.css attached on their own.
 async function appFilesFromRelease(tag) {
@@ -105,11 +121,12 @@ async function appFilesFromRelease(tag) {
     const zipRes = await fetch(base + "BetterCompass-extension.zip", { cache: "no-store" })
     if (zipRes.ok) {
       const buf = await zipRes.arrayBuffer()
-      const [js, css] = await Promise.all([
+      const [js, css, page] = await Promise.all([
         fileFromZip(buf, "app/js/app.js"),
-        fileFromZip(buf, "app/css/app.css")
+        fileFromZip(buf, "app/css/app.css"),
+        fileFromZip(buf, "page.js").catch(() => null)
       ])
-      if (js && css) return { js, css }
+      if (js && css) return { js, css, page: usablePage(page) }
     }
   } catch (e) {
     /* fall through to the loose files */
@@ -120,7 +137,12 @@ async function appFilesFromRelease(tag) {
   ])
   if (!jsRes.ok || !cssRes.ok) return null
   const [js, css] = await Promise.all([jsRes.text(), cssRes.text()])
-  return { js, css }
+  let page = null
+  try {
+    const pageRes = await fetch(base + "page.js", { cache: "no-store" })
+    if (pageRes.ok) page = usablePage(await pageRes.text())
+  } catch (e) {}
+  return { js, css, page }
 }
 
 // Looks at the latest release and downloads it if it is newer than what we
@@ -159,7 +181,7 @@ async function checkForUpdate(force) {
 
   const files = await appFilesFromRelease(tag)
   if (!files) return { state: "incomplete", version }
-  const { js, css } = files
+  const { js, css, page } = files
   // A release without real files (or an error page) must never replace a
   // working copy.
   if (js.length < MIN_JS_BYTES || css.length < MIN_CSS_BYTES) {
@@ -167,7 +189,7 @@ async function checkForUpdate(force) {
   }
   if (js.trimStart().startsWith("<")) return { state: "incomplete", version }
 
-  await chrome.storage.local.set({ remote: { version, js, css, savedAt: Date.now() } })
+  await chrome.storage.local.set({ remote: { version, js, css, page, savedAt: Date.now() } })
   return { state: "downloaded", version }
 }
 
@@ -204,6 +226,38 @@ function startDownloadedApp(code, version, source) {
   document.documentElement.dataset.bcxVersion = version
   document.documentElement.dataset.bcxSource = source
   ;(0, eval)(code)
+}
+
+// Runs a downloaded page.js in an ordinary Compass page. Says whether it
+// ran, so the bundled copy can be used if the page refused it.
+function startDownloadedPage(code) {
+  try {
+    ;(0, eval)(code)
+    return true
+  } catch (e) {
+    return false
+  }
+}
+
+async function putPageScriptInTab(tabId) {
+  const target = { tabId }
+  let downloaded = null
+  try {
+    downloaded = await getDownloaded()
+  } catch (e) {}
+  if (downloaded && downloaded.page) {
+    try {
+      const out = await chrome.scripting.executeScript({
+        target,
+        world: "MAIN",
+        func: startDownloadedPage,
+        args: [downloaded.page]
+      })
+      if (out && out[0] && out[0].result === true) return "github"
+    } catch (e) {}
+  }
+  await chrome.scripting.executeScript({ target, world: "MAIN", files: ["page.js"] })
+  return "bundled"
 }
 
 async function putBundledInTab(tabId) {
@@ -261,6 +315,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ version: app.version, source: app.source })
       checkInBackground(tabId, false)
     })().catch((e) => sendResponse({ error: String((e && e.message) || e) }))
+    return true
+  }
+  if (msg.type === "bcx-get-page") {
+    putPageScriptInTab(sender.tab && sender.tab.id)
+      .then((source) => sendResponse({ source }))
+      .catch((e) => sendResponse({ error: String((e && e.message) || e) }))
     return true
   }
   if (msg.type === "bcx-bad-version") {
